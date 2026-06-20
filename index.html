@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>El Timón - Menú Digital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1628;font-family:Georgia,"Times New Roman",serif;color:#e8d5b0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(180,145,60,0.3);border-radius:4px}
+select option{background:#0d1a30}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const SUPABASE_URL = "https://iyvhjwzsazpoaufzaqpl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dmhqd3pzYXpwb2F1ZnphcXBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTM5MTQsImV4cCI6MjA5NjQyOTkxNH0.MGkMOo4egJXSZ7JcQec4jsCoK6y2zWGbQ_emsNs9Sbg";
+const SITE_URL = "https://timon-menu.vercel.app";
+
+const MENU_INICIAL = {
+  restaurant:{name:"El Timón",subtitle:"Cocina casera · Parrilla · Pastas · Pescados",address:"Tel: 4772-0370 / 4777-2798",currency:"$"},
+  categories:[
+    {id:"cafeteria",name:"Cafetería",emoji:"☕",items:[
+      {id:"ca01",name:"Café",price:3800},{id:"ca02",name:"Café con Leche",price:6000},
+      {id:"ca03",name:"Café con Crema",price:6300},{id:"ca04",name:"Café Doble",price:7000},
+      {id:"ca05",name:"Café Doble con Crema",price:8500},{id:"ca06",name:"Capuchino Tradicional",price:6400},
+      {id:"ca07",name:"Café Doble Especial",price:18700},{id:"ca08",name:"Té Clásico",price:3800},
+      {id:"ca09",name:"Té Saborizado",price:4500},{id:"ca10",name:"Café con Leche + 2 Medialunas",price:7700},
+      {id:"ca11",name:"Café con Tostadas Q&M",price:11000},{id:"ca12",name:"Saludable",price:14000},
+      {id:"ca13",name:"Porteño",price:11000},{id:"ca14",name:"Dorrego",price:22000},
+      {id:"ca15",name:"Don Jesús",price:22000},{id:"ca16",name:"Dolce Submarino",price:22000},
+      {id:"ca17",name:"Tostado de Miga",price:17000},{id:"ca18",name:"Combo 1/2 Tostado + Café con Leche",price:19300},
+      {id:"ca19",name:"1/2 Tostado",price:11500},{id:"ca20",name:"Huevos Revueltos",price:7000},
+      {id:"ca21",name:"Medialuna Rellena",price:7200},{id:"ca22",name:"Medialuna",price:1900},
+      {id:"ca23",name:"Submarino o Chocolatada",price:9200},{id:"ca24",name:"Exprimidos",price:7500},
+      {id:"ca25",name:"Milkshake",price:18500},{id:"ca26",name:"Licuado de Banana",price:9500},
+      {id:"ca27",name:"Limonadas",price:8500},{id:"ca28",name:"Licuado Durazno Naranja",price:17000},
+      {id:"ca29",name:"Jarra Limonada",price:17000},{id:"ca30",name:"Licuado Detox",price:18500},
+      {id:"ca31",name:"Desayuno Americano",price:30000},{id:"ca32",name:"Proteico",price:20000},
+      {id:"ca33",name:"Alfajor Coco",price:2700},{id:"ca34",name:"Alfajor Choco",price:2500},
+      {id:"ca35",name:"Pasta Frola",price:2500},{id:"ca36",name:"Brownie",price:2900},
+      {id:"ca37",name:"Maicena",price:1500},{id:"ca38",name:"Conito",price:2000},
+      {id:"ca39",name:"Barritas",price:2300},{id:"ca40",name:"Crackines",price:600},
+    ]},
+    {id:"sandwiches",name:"Sandwichería",emoji:"🥪",items:[
+      {id:"sw01",name:"Pan Árabe o Pan Pizza",price:13500},{id:"sw02",name:"Sandwich Jamón Crudo y Queso",price:16500},
+      {id:"sw03",name:"Sandwich de Pollo Capresse",price:18500},{id:"sw04",name:"Sandwich de Bondiolita",price:18000},
+      {id:"sw05",name:"De Atún",price:20000},{id:"sw06",name:"Sandwich de Salmón",price:22000},
+      {id:"sw07",name:"Vegetariano",price:20000},{id:"sw08",name:"Cantimpalos",price:17000},
+      {id:"sw09",name:"Chivito Uruguayo",price:18000},{id:"sw10",name:"Sandwich de Milanesa",price:8000},
+      {id:"sw11",name:"De Mila con Lechuga y Tomate",price:10000},{id:"sw12",name:"De Mila Completo",price:19000},
+      {id:"sw13",name:"Sandwich Jamón Crudo, Muzza, Rúcula",price:19000},{id:"sw14",name:"Tostado de Miga",price:17000},
+      {id:"sw15",name:"Tostado Árabe JQT",price:14500},{id:"sw16",name:"Tostado Miga JQyTomate",price:19000},
+    ]},
+    {id:"tartasemp",name:"Tartas y Empanadas",emoji:"🥟",items:[
+      {id:"te01",name:"Tartas (porción)",price:6500},{id:"te02",name:"Empanadas (c/u)",price:3100},{id:"te03",name:"Buñuelo",price:3100},
+    ]},
+    {id:"saludable",name:"Opciones Saludables",emoji:"🥦",items:[
+      {id:"sa01",name:"Tarta + Ensalada",price:11000},{id:"sa02",name:"Berenjenas",price:11000},
+      {id:"sa03",name:"Omelette Espinaca",price:18000},{id:"sa04",name:"Panache",price:18000},
+    ]},
+    {id:"entradas",name:"Entradas",emoji:"🥗",items:[
+      {id:"en01",name:"Rabas",price:25000},{id:"en02",name:"Mejillones con Cáscaras",price:25000},
+      {id:"en03",name:"Gambas",price:18000},{id:"en04",name:"Langostinos",price:18000},
+      {id:"en05",name:"Mollejas al Champiñón",price:29000},{id:"en06",name:"Hígado",price:16000},
+      {id:"en07",name:"Calamarettis",price:33000},{id:"en08",name:"Matambre Casero",price:25000},
+      {id:"en09",name:"Jamón Crudo con Rusa",price:25000},{id:"en10",name:"Muzza a la Milanesa",price:16500},
+      {id:"en11",name:"Tortilla",price:18000},{id:"en12",name:"Tortilla Española",price:27000},
+      {id:"en13",name:"Omelette",price:12000},{id:"en14",name:"Provoleta",price:18000},
+      {id:"en15",name:"Cornalitos",price:11000},{id:"en16",name:"Porción Fritas",price:11000},
+      {id:"en17",name:"Guarnición Fritas",price:7000},{id:"en18",name:"Guarnición Ensalada",price:7500},
+      {id:"en19",name:"Tortilla con Cebolla",price:20000},{id:"en20",name:"Revuelto Gramajo",price:30000},
+      {id:"en21",name:"Mollejas al Vino Blanco",price:27000},{id:"en22",name:"Mollejas al Vino",price:25000},
+    ]},
+    {id:"minutas",name:"Minutas y Platos",emoji:"🍽️",items:[
+      {id:"mi01",name:"Milanesa Ternera con Puré",price:39000},{id:"mi02",name:"Milanesa Ternera con Fritas",price:39000},
+      {id:"mi03",name:"Milanesa con Ensalada",price:42000},{id:"mi04",name:"Milanesa Ternera Napolitana",price:54000},
+      {id:"mi05",name:"Milanesa Napolitana c/Puré",price:54000},{id:"mi06",name:"Milanesa Napolitana con Ensalada",price:57000},
+      {id:"mi07",name:"Milanesa Marplatense",price:59000},{id:"mi08",name:"Milanesa Completa",price:49000},
+      {id:"mi09",name:"Milanesa Salvaje",price:61000},{id:"mi10",name:"Milanesa de Peceto",price:32000},
+      {id:"mi11",name:"Suprema de Pollo",price:40000},{id:"mi12",name:"Suprema a la Suiza",price:52000},
+      {id:"mi13",name:"Suprema Maryland",price:57000},{id:"mi14",name:"Suprema Fugazzeta",price:55000},
+      {id:"mi15",name:"Suprema de Pollo Napolitana",price:56000},{id:"mi16",name:"Tirita de Pollo",price:33000},
+      {id:"mi17",name:"Pechuga de Pollo con Fritas",price:21000},{id:"mi18",name:"Pechuga Grillé con Ensalada",price:22000},
+      {id:"mi19",name:"Pollito al Verdeo",price:28500},{id:"mi20",name:"Arroz con Pollo",price:28500},
+      {id:"mi21",name:"Novillito Champiñón",price:36000},{id:"mi22",name:"Novillito con Papas",price:32000},
+      {id:"mi23",name:"Escalope de Lomo Marsala",price:40000},{id:"mi24",name:"Huevos Fritos",price:1500},
+    ]},
+    {id:"parrilla",name:"Parrilla",emoji:"🥩",items:[
+      {id:"pa01",name:"Asado con Fritas",price:42000},{id:"pa02",name:"Entraña con Fritas",price:54000},
+      {id:"pa03",name:"Bife de Chorizo",price:48000},{id:"pa04",name:"Bondiola",price:35000},
+      {id:"pa05",name:"Matambre Pizza",price:35000},{id:"pa06",name:"Matambrito Roquefort",price:39000},
+      {id:"pa07",name:"Matambrito Verdeo",price:33000},{id:"pa08",name:"Bifacho Timón",price:63000},
+      {id:"pa09",name:"Medallón de Lomo Champiñón",price:54000},{id:"pa10",name:"Tablita",price:79000},
+      {id:"pa11",name:"Ribs Cerdo",price:45000},{id:"pa12",name:"Costillitas Cerdo",price:30000},
+      {id:"pa13",name:"Chorizo",price:5000},{id:"pa14",name:"Morcilla",price:5000},
+      {id:"pa15",name:"Pallar Lomo con Ensalada",price:28000},{id:"pa16",name:"Pallar Lomo c/Guarnición",price:32000},
+      {id:"pa17",name:"Colita Mechada",price:40000},
+    ]},
+    {id:"pastas",name:"Pastas Caseras",emoji:"🍝",items:[
+      {id:"ps01",name:"Ñoquis",price:10000},{id:"ps02",name:"Ñoqui Relleno Cheddar",price:23000},
+      {id:"ps03",name:"Ñoqui Roquefort",price:25000},{id:"ps04",name:"Ñoqui Scarparo",price:25000},
+      {id:"ps05",name:"Ñoqui Príncipe Napoli",price:25000},{id:"ps06",name:"Ñoqui 4 Quesos",price:25000},
+      {id:"ps07",name:"Ñoqui Francesa",price:22000},{id:"ps08",name:"Ñoqui Salsa Camarones",price:30000},
+      {id:"ps09",name:"Ñoqui Carbonara",price:28000},{id:"ps10",name:"Ñoqui Estilo Timón",price:28000},
+      {id:"ps11",name:"Ñoqui Bucanera",price:39000},{id:"ps12",name:"Ñoqui Romagnola",price:22000},
+      {id:"ps13",name:"Ñoqui Gran Carusso",price:28000},{id:"ps14",name:"Ñoqui Pana",price:24000},
+      {id:"ps15",name:"Ñoqui Tuna",price:25000},{id:"ps16",name:"Ñoqui Crema Espinaca",price:19000},
+      {id:"ps17",name:"Ñoqui Napolitana",price:25000},{id:"ps18",name:"Ñoqui Funchi",price:25000},
+      {id:"ps19",name:"Ñoqui Crema Puerro",price:25000},{id:"ps20",name:"Ñoqui Boloñesa/Estofado",price:25000},
+      {id:"ps21",name:"Ñoqui Pesto",price:10000},{id:"ps22",name:"Ñoqui Pesto Mixta",price:10000},
+      {id:"ps23",name:"Ñoqui con Estofado",price:25000},{id:"ps24",name:"Ravioles de Ricota (Estof./4 Quesos)",price:28000},
+      {id:"ps25",name:"Ravioles Verdura",price:14500},{id:"ps26",name:"Ravioles Light",price:23000},
+      {id:"ps27",name:"Ravioles Cordero",price:28000},{id:"ps28",name:"Ravioles Salmón",price:37000},
+      {id:"ps29",name:"Raviol Ricota",price:14500},{id:"ps30",name:"Raviol Bondiola",price:33000},
+      {id:"ps31",name:"Sorrentinos",price:23000},{id:"ps32",name:"Sorrentino Capresse",price:24000},
+      {id:"ps33",name:"Fussillis Fierritos",price:25000},{id:"ps34",name:"Spaghettis Timón",price:36000},
+      {id:"ps35",name:"Tallarín Parissiene",price:23000},{id:"ps36",name:"Tallarín",price:10000},
+      {id:"ps37",name:"Tallarín Mixta",price:10000},
+    ]},
+    {id:"pescados",name:"Pescados",emoji:"🐟",items:[
+      {id:"pe01",name:"Filet Merluza",price:27500},{id:"pe02",name:"Salmón con Vegetales",price:49000},
+      {id:"pe03",name:"Arroz con Frutos de Mar",price:57000},{id:"pe04",name:"Scaloneta Chica",price:50000},
+      {id:"pe05",name:"Arroz con Calamares",price:29000},{id:"pe06",name:"Paella",price:69000},
+      {id:"pe07",name:"Filet Espinaca Crema Espinaca",price:31000},{id:"pe08",name:"Sandwich Salmón",price:22000},
+      {id:"pe09",name:"Salmón con Arroz del Bosque",price:49000},{id:"pe10",name:"Rabas",price:25000},
+      {id:"pe11",name:"Calamarettis",price:33000},{id:"pe12",name:"Filet Abadejo Limón",price:31000},
+      {id:"pe13",name:"Filet Lenguado Puerros",price:35000},
+    ]},
+    {id:"ensaladas",name:"Ensaladas",emoji:"🥙",items:[
+      {id:"es00",name:"Ensalada Varias",price:14000},
+      {id:"es01",name:"100 · Caesar (Lechuga, Pollo, Parmesano, Croutones)",price:22000},
+      {id:"es02",name:"101 · Espinaca, Palmitos, Panceta, Champiñón, Ciboulet",price:25000},
+      {id:"es03",name:"102 · Hojas Verdes, Jamón Crudo, Parmesano, Pollo, Cherrys, Bocconcinos",price:29000},
+      {id:"es04",name:"103 · Muzza, Port Salut, Tomate, Pimientos, Albahaca, Aceitunas Negras",price:23000},
+      {id:"es05",name:"104 · Salmón Ahumado, Espinaca, Palmitos, Palta, Champiñón",price:39000},
+      {id:"es06",name:"105 · Hojas Verdes, Endibias Rellenas, Champiñón, Tomate Cherry",price:21000},
+      {id:"es07",name:"106 · Atún Natural, Tomate, Champiñón, Cherrys, Queso Blanco, Espinaca",price:25000},
+      {id:"es08",name:"107 · Salmón Ahumado, Palmito, Ananá, Zanahoria, Manzana Rallada",price:39000},
+      {id:"es09",name:"108 · Blanco Ave, Lechuga, Huevo, Papa, Tomate, Choclo, Pimientos",price:26000},
+      {id:"es10",name:"109 · Atún Natural, Lechuga, Huevos, Papa, Tomate, Choclo, Pimientos",price:27000},
+      {id:"es11",name:"110 · Láminas de Pollo, Espinaca, Champiñón, Jamón Crudo, Rúcula",price:29000},
+      {id:"es12",name:"111 · Blanco Ave, Melón, Palmito, Apio, Queso Blanco",price:25000},
+      {id:"es13",name:"112 · Espinaca, Parmesano, Panceta, Champiñón",price:22000},
+      {id:"es14",name:"114 · Láminas Pollo, Zanahoria, Choclo, Clara de Huevo",price:23000},
+      {id:"es15",name:"115 · Capresse (Muzza, Tomate Seco, Cherry, Albahaca, Aceitunas)",price:25000},
+      {id:"es16",name:"116 · Insalatta (Jamón Crudo, Muzza, Rúcula, Tomate Seco, Alcaparras)",price:27000},
+      {id:"es17",name:"117 · Hojas Verdes, Bocconcinos, Parmesano, Apio, Roquefort, Nuez",price:25000},
+      {id:"es18",name:"118 · Muzza, Tomate Seco, Berenjenas, Zucchinis Asados, Rúcula, Oliva",price:26000},
+    ]},
+    {id:"pizzas",name:"Pizzas",emoji:"🍕",items:[
+      {id:"pz01",name:"Muzza",price:18800},{id:"pz02",name:"Napolitana",price:23000},
+      {id:"pz03",name:"Jamón y Morrón",price:27000},{id:"pz04",name:"Fugazzeta",price:23000},
+      {id:"pz05",name:"Crudo con Rúcula",price:27000},
+    ]},
+    {id:"postres",name:"Postres",emoji:"🍮",items:[
+      {id:"po01",name:"Flan c/Crema o Dulce de Leche",price:10000},{id:"po02",name:"Flan con Dulce",price:10000},
+      {id:"po03",name:"Flan Mixto",price:12000},{id:"po04",name:"Postre Timón",price:18000},
+      {id:"po05",name:"Cuadrado de Manzana",price:8000},{id:"po06",name:"Cuadrado de Ricota",price:9000},
+      {id:"po07",name:"Budín de Pan",price:7000},{id:"po08",name:"Budín con Dulce",price:10000},
+      {id:"po09",name:"Budín de Pan Mixto",price:12000},{id:"po10",name:"Ensalada de Frutas",price:9000},
+      {id:"po11",name:"Queso y Dulce",price:10000},{id:"po12",name:"Almendrado",price:12000},
+      {id:"po13",name:"Almendrado Charlotte",price:18000},{id:"po14",name:"Bocha de Helado",price:5000},
+      {id:"po15",name:"Tiramisú",price:11000},{id:"po16",name:"Panqueque Dulce de Leche",price:12000},
+      {id:"po17",name:"Panqueque de Manzana",price:15000},{id:"po18",name:"Panqueque Manzana Rhum",price:22000},
+      {id:"po19",name:"Frutilla con Crema",price:12000},{id:"po20",name:"Durazno con Crema",price:12000},
+      {id:"po21",name:"Don Pedro",price:22000},{id:"po22",name:"Banana Split",price:17000},
+      {id:"po23",name:"Rogel",price:10000},{id:"po24",name:"Lemon",price:8000},{id:"po25",name:"Mousse Tarteletitas",price:14000},
+    ]},
+    {id:"bebidas",name:"Bebidas",emoji:"🥤",items:[
+      {id:"be01",name:"Agua",price:3900},{id:"be02",name:"Agua/Gaseosa con Limón",price:4000},
+      {id:"be03",name:"Saborizada",price:3900},{id:"be04",name:"Coca-Cola",price:3900},
+      {id:"be05",name:"Tragos",price:10000},{id:"be06",name:"Aperol Spritz",price:10000},
+      {id:"be07",name:"Lata Cerveza Chica",price:10500},{id:"be08",name:"Latón 710",price:11000},
+      {id:"be09",name:"Heineken",price:12500},{id:"be10",name:"Lata Heineken 710",price:11000},
+      {id:"be11",name:"Imperial",price:12500},{id:"be12",name:"Grolsch",price:14000},
+      {id:"be13",name:"Sidra 750cm",price:20000},{id:"be14",name:"Sidra 1888",price:20000},
+      {id:"be15",name:"Limonada Vaso",price:8500},{id:"be16",name:"Jarra Limonada",price:17000},
+      {id:"be17",name:"Promo Muzza + Litro",price:27000},{id:"be18",name:"Promo Cerveza + Empanada",price:21000},
+      {id:"be19",name:"Promo Cerveza + Fritas",price:17000},{id:"be20",name:"Lata 700 + Rabas",price:24000},
+      {id:"be21",name:"Menú",price:16000},{id:"be22",name:"Menú Ensaladas",price:16000},{id:"be23",name:"Servicio de Mesa",price:1000},
+    ]},
+    {id:"vinos",name:"Vinos",emoji:"🍷",items:[
+      {id:"vi01",name:"Copa de Malbec",price:8500},{id:"vi02",name:"Emilia",price:19000},
+      {id:"vi03",name:"Elemento Malbec 750",price:18000},{id:"vi04",name:"Elemento Torrontés",price:18000},
+      {id:"vi05",name:"Don David Malbec",price:25000},{id:"vi06",name:"Don David Torrontés",price:25000},
+      {id:"vi07",name:"Alma Mora Malbec",price:21000},{id:"vi08",name:"Fond de Cave",price:27000},
+      {id:"vi09",name:"Ruca Malen 1",price:28000},{id:"vi10",name:"Nicasia",price:28000},
+      {id:"vi11",name:"Trumpeter 750",price:33000},{id:"vi12",name:"Medalla",price:34000},
+      {id:"vi13",name:"Chandom",price:36000},{id:"vi14",name:"Catena Cab-Malbec",price:37000},
+      {id:"vi15",name:"Rutini Malbec",price:37000},{id:"vi16",name:"Escorihuela Gascón",price:37000},
+      {id:"vi17",name:"Ruttini",price:37000},{id:"vi18",name:"Catena DV (Malbec-Malbec)",price:45000},
+      {id:"vi19",name:"Finca Notable",price:47000},{id:"vi20",name:"Tupungato Malbec",price:53000},
+      {id:"vi21",name:"Angelica Z",price:65000},{id:"vi22",name:"Barón B",price:65000},
+      {id:"vi23",name:"Ruca Cap 3",price:112000},{id:"vi24",name:"Cadus Assemblage",price:127000},
+    ]},
+    {id:"cocktails",name:"Cocktails",emoji:"🍹",items:[]},
+  ]
+};
+
+const {useState,useEffect}=React;
+
+// ── Generar PDF carta completa ────────────────────────────────────
+function generarPDF(menu){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  const PW=210, PH=297;
+  const margin=15;
+  let y=margin;
+
+  function checkPage(needed=10){
+    if(y+needed>PH-margin){doc.addPage();y=margin;}
+  }
+
+  // ── Timón SVG dibujado con líneas ──
+  function drawTimon(cx,cy,r){
+    doc.setDrawColor(180,140,30);
+    doc.setLineWidth(0.5);
+    // radios
+    for(let i=0;i<8;i++){
+      const ang=(i*45)*Math.PI/180;
+      doc.line(cx+r*0.3*Math.cos(ang),cy+r*0.3*Math.sin(ang),cx+r*0.9*Math.cos(ang),cy+r*0.9*Math.sin(ang));
+    }
+    // aro exterior
+    doc.circle(cx,cy,r);
+    // hub
+    doc.setFillColor(30,30,30);
+    doc.circle(cx,cy,r*0.25,"F");
+    doc.setFillColor(180,140,30);
+    doc.circle(cx,cy,r*0.12,"F");
+  }
+
+  // ── HEADER ──
+  // Fondo negro header
+  doc.setFillColor(15,22,40);
+  doc.rect(0,0,PW,45,"F");
+
+  // Timón
+  drawTimon(PW/2,14,7);
+
+  // Nombre
+  doc.setTextColor(212,168,67);
+  doc.setFont("times","bolditalic");
+  doc.setFontSize(28);
+  doc.text("El Timón",PW/2,28,{align:"center"});
+
+  // Subtítulo
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(8);
+  doc.setTextColor(160,128,64);
+  doc.text("Cocina casera  ·  Parrilla  ·  Pastas  ·  Pescados",PW/2,34,{align:"center"});
+
+  // Tel
+  doc.setFontSize(7.5);
+  doc.setTextColor(120,100,50);
+  doc.text("Tel: 4772-0370 / 4777-2798",PW/2,39,{align:"center"});
+
+  // Línea dorada
+  doc.setDrawColor(180,140,30);
+  doc.setLineWidth(0.6);
+  doc.line(margin,43,PW-margin,43);
+
+  y=50;
+
+  // ── CATEGORÍAS E ÍTEMS ──
+  menu.categories.forEach(cat=>{
+    if(cat.items.length===0)return;
+    checkPage(14);
+
+    // Cabecera categoría
+    doc.setFillColor(235,228,210);
+    doc.rect(margin,y-5,PW-margin*2,9,"F");
+    doc.setDrawColor(180,140,30);
+    doc.setLineWidth(0.3);
+    doc.rect(margin,y-5,PW-margin*2,9,"S");
+
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(10);
+    doc.setTextColor(30,20,5);
+    doc.text(cat.emoji+" "+cat.name.toUpperCase(),margin+3,y+0.5);
+    y+=10;
+
+    // Ítems
+    cat.items.forEach((item,idx)=>{
+      checkPage(7);
+      // fondo alternado
+      if(idx%2===0){
+        doc.setFillColor(252,250,245);
+        doc.rect(margin,y-4,PW-margin*2,6.5,"F");
+      }
+      // nombre
+      doc.setFont("helvetica","normal");
+      doc.setFontSize(9);
+      doc.setTextColor(40,30,10);
+      const maxW=PW-margin*2-35;
+      const nameLines=doc.splitTextToSize(item.name,maxW);
+      doc.text(nameLines,margin+3,y);
+      // puntos
+      doc.setTextColor(180,160,120);
+      doc.setFont("helvetica","normal");
+      // precio
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(9);
+      doc.setTextColor(40,30,10);
+      const priceStr="$ "+Number(item.price).toLocaleString("es-AR");
+      doc.text(priceStr,PW-margin-2,y,{align:"right"});
+      // línea separadora suave
+      doc.setDrawColor(220,210,190);
+      doc.setLineWidth(0.1);
+      doc.line(margin,y+2.5,PW-margin,y+2.5);
+      y+=nameLines.length>1?nameLines.length*5+1:6.5;
+    });
+    y+=4;
+  });
+
+  // ── FOOTER en cada página ──
+  const totalPages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setDrawColor(180,140,30);
+    doc.setLineWidth(0.3);
+    doc.line(margin,PH-12,PW-margin,PH-12);
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(7);
+    doc.setTextColor(150,120,60);
+    doc.text("timon-menu.vercel.app",margin,PH-7);
+    doc.text(`Página ${p} de ${totalPages}`,PW-margin,PH-7,{align:"right"});
+    doc.text("Precios en pesos argentinos · IVA incluido",PW/2,PH-7,{align:"center"});
+  }
+
+  doc.save("carta-el-timon.pdf");
+}
+
+async function dbLoad(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/menu_items?select=*&order=id`,{headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY}});
+  return r.ok?r.json():null;
+}
+async function dbSaveAll(categories){
+  await fetch(`${SUPABASE_URL}/rest/v1/menu_items?id=neq.NONE`,{method:"DELETE",headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"}});
+  const rows=[];
+  categories.forEach((cat,catIdx)=>cat.items.forEach((item,itemIdx)=>{
+    rows.push({id:item.id,category_id:cat.id,category_name:cat.name,category_emoji:cat.emoji,item_name:item.name,price:item.price,cat_order:catIdx,item_order:itemIdx});
+  }));
+  if(rows.length===0)return true;
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/menu_items`,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(rows)});
+  return r.ok||r.status===201;
+}
+function dbToMenu(rows,base){
+  if(!rows||rows.length===0)return null;
+  const cats={};
+  const catOrder={};
+  rows.forEach(r=>{
+    if(!cats[r.category_id])cats[r.category_id]={id:r.category_id,name:r.category_name,emoji:r.category_emoji,items:[],_order:r.cat_order||0};
+    cats[r.category_id].items.push({id:r.id,name:r.item_name,price:r.price,_order:r.item_order||0});
+  });
+  Object.values(cats).forEach(c=>c.items.sort((a,b)=>a._order-b._order));
+  const sorted=Object.values(cats).sort((a,b)=>a._order-b._order);
+  // add empty cats from base that have no items in db
+  const dbIds=new Set(sorted.map(c=>c.id));
+  base.categories.forEach(bc=>{if(!dbIds.has(bc.id)&&bc.items.length===0)sorted.push({...bc});});
+  return{...base,categories:sorted};
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function fmt(p){return"$ "+Number(p).toLocaleString("es-AR",{minimumFractionDigits:0,maximumFractionDigits:0,useGrouping:true});}
+function applyPct(p,pct){return Math.round(p*(1+pct/100));}
+
+function TimonSVG({size=60}){
+  return(<svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+    {[0,45,90,135,180,225,270,315].map((ang,i)=>{
+      const r=ang*Math.PI/180,x1=50+14*Math.cos(r),y1=50+14*Math.sin(r),x2=50+39*Math.cos(r),y2=50+39*Math.sin(r),hx=50+45*Math.cos(r),hy=50+45*Math.sin(r);
+      return(<g key={i}><line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#c8962a" strokeWidth="4" strokeLinecap="round"/><ellipse cx={hx} cy={hy} rx="5" ry="7.5" transform={`rotate(${ang} ${hx} ${hy})`} fill="#7a4f10" stroke="#c8962a" strokeWidth="1.5"/></g>);
+    })}
+    <circle cx="50" cy="50" r="40" stroke="#c8962a" strokeWidth="5" fill="none"/>
+    <circle cx="50" cy="50" r="14" fill="#0a1628" stroke="#c8962a" strokeWidth="4"/>
+    <circle cx="50" cy="50" r="7" fill="#c8962a"/>
+  </svg>);
+}
+
+function CustomerView({menu}){
+  const {restaurant,categories}=menu;
+  const [tab,setTab]=useState(categories[0]?.id);
+  const cat=categories.find(c=>c.id===tab)||categories[0];
+  return(<div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0a1628 0%,#152040 40%,#0d1a30 100%)"}}>
+    <div style={{background:"rgba(0,0,0,0.65)",padding:"28px 20px 18px",textAlign:"center",borderBottom:"1px solid rgba(180,145,60,0.3)"}}>
+      <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><TimonSVG size={68}/></div>
+      <h1 style={{fontFamily:"'Palatino Linotype',Palatino,serif",fontSize:"clamp(26px,7vw,42px)",fontWeight:700,color:"#d4a843",margin:"0 0 4px",letterSpacing:3,textShadow:"0 2px 12px rgba(0,0,0,0.7)"}}>{restaurant.name}</h1>
+      <p style={{color:"#a08040",fontSize:13,margin:"0 0 3px",fontStyle:"italic"}}>{restaurant.subtitle}</p>
+      {restaurant.address&&<p style={{color:"#4a5570",fontSize:12,margin:0}}>{restaurant.address}</p>}
+    </div>
+    <div style={{display:"flex",overflowX:"auto",gap:7,padding:"11px 11px 0",scrollbarWidth:"none"}}>
+      {categories.map(c=>(<button key={c.id} onClick={()=>setTab(c.id)} style={{flex:"0 0 auto",background:tab===c.id?"linear-gradient(135deg,#b8891e,#d4a843)":"rgba(255,255,255,0.05)",border:tab===c.id?"none":"1px solid rgba(180,145,60,0.2)",color:tab===c.id?"#0a1628":"#a08040",padding:"6px 14px",borderRadius:999,fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{c.emoji} {c.name}</button>))}
+    </div>
+    <div style={{padding:"15px 11px 50px"}}>
+      {cat&&<><h2 style={{fontSize:17,color:"#d4a843",marginBottom:11,fontFamily:"'Palatino Linotype',serif",borderBottom:"1px solid rgba(180,145,60,0.25)",paddingBottom:7}}>{cat.emoji} {cat.name}</h2>
+      {cat.items.length===0?<p style={{color:"#404860",fontSize:13,fontStyle:"italic"}}>Próximamente...</p>:
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {cat.items.map(item=>(<div key={item.id} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.15)",borderRadius:10,padding:"11px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+          <div style={{flex:1,fontSize:14,color:"#ddd0b0",fontWeight:500,lineHeight:1.3}}>{item.name}</div>
+          <div style={{fontSize:15,fontWeight:700,color:"#d4a843",whiteSpace:"nowrap",background:"rgba(180,140,30,0.12)",padding:"4px 10px",borderRadius:7,border:"1px solid rgba(180,140,30,0.25)",fontFamily:"Arial,Helvetica,sans-serif"}}>{fmt(item.price)}</div>
+        </div>))}
+      </div>}</>}
+    </div>
+    <div style={{textAlign:"center",padding:"0 0 22px",color:"#1e2535",fontSize:11}}>Precios en pesos argentinos · IVA incluido</div>
+    <button onClick={()=>window._showLogin&&window._showLogin()} style={{position:"fixed",bottom:16,right:16,background:"rgba(0,0,0,0.7)",border:"1px solid rgba(180,145,60,0.25)",color:"rgba(180,145,60,0.4)",width:36,height:36,borderRadius:"50%",cursor:"pointer",fontSize:14,backdropFilter:"blur(4px)",zIndex:100}}>⚙️</button>
+  </div>);
+}
+
+function ItemRow({item,onName,onPrice,onDelete,iStyle}){
+  const [editing,setEditing]=useState(false);
+  const [localName,setLocalName]=useState(item.name);
+  useEffect(()=>setLocalName(item.name),[item.name]);
+  return(<div style={{display:"flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"7px 9px"}}>
+    <div style={{flex:1}}>
+      {editing?<input type="text" value={localName} onChange={e=>setLocalName(e.target.value)} onBlur={()=>{onName(localName);setEditing(false);}} onKeyDown={e=>{if(e.key==="Enter"){onName(localName);setEditing(false);}}} autoFocus style={{...iStyle,width:"100%",fontSize:13}}/>
+      :<div onClick={()=>setEditing(true)} style={{fontSize:13,color:"#c8c0a0",cursor:"text",padding:"3px 5px",borderRadius:5,border:"1px solid transparent"}} title="Tocá para editar">{item.name}</div>}
+    </div>
+    <div style={{display:"flex",alignItems:"center",gap:4}}>
+      <span style={{color:"#505838",fontSize:12}}>$</span>
+      <input type="text" value={item.price.toLocaleString("es-AR")} onChange={e=>onPrice(e.target.value)} style={{...iStyle,width:88,textAlign:"right",fontWeight:700,fontSize:13,color:"#d4a843",fontFamily:"Arial,Helvetica,sans-serif"}}/>
+    </div>
+    <button onClick={onDelete} style={{background:"rgba(200,60,60,0.15)",border:"1px solid rgba(200,60,60,0.3)",borderRadius:7,color:"#ff7070",cursor:"pointer",fontSize:18,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,lineHeight:1}}>×</button>
+  </div>);
+}
+
+function AdminPanel({menu,setMenu,onExit}){
+  const [tab,setTab]=useState("items");
+  const [bulkMode,setBulkMode]=useState("category");
+  const [bulkCatId,setBulkCatId]=useState(menu.categories[0]?.id);
+  const [bulkPct,setBulkPct]=useState("");
+  const [msg,setMsg]=useState(null);
+  const [saving,setSaving]=useState(false);
+  const [search,setSearch]=useState("");
+  const [expandedCat,setExpandedCat]=useState(null);
+  const [editR,setEditR]=useState({...menu.restaurant});
+  const [newCatName,setNewCatName]=useState("");
+  const [newCatEmoji,setNewCatEmoji]=useState("🍴");
+  const [dragOver,setDragOver]=useState(null);
+  const [dragIdx,setDragIdx]=useState(null);
+
+  function showMsg(t,ok=true){setMsg({t,ok});setTimeout(()=>setMsg(null),3500);}
+  async function guardar(){
+    setSaving(true);
+    const ok=await dbSaveAll(menu.categories);
+    setSaving(false);
+    ok?showMsg("✅ ¡Guardado! Los cambios ya están en el menú."):showMsg("❌ Error al guardar. Intentá de nuevo.",false);
+  }
+  function updatePrice(catId,itemId,raw){const v=parseInt(raw.replace(/[^0-9]/g,""),10);if(isNaN(v))return;setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:c.items.map(i=>i.id!==itemId?i:{...i,price:v})})}));}
+  function updateName(catId,itemId,val){setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:c.items.map(i=>i.id!==itemId?i:{...i,name:val})})}));}
+  function deleteItem(catId,itemId){setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:c.items.filter(i=>i.id!==itemId)})}));}
+  function addItem(catId){setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:[...c.items,{id:uid(),name:"Nuevo ítem",price:0}]})}));}
+  function addCategory(){
+    if(!newCatName.trim()){showMsg("⚠️ Escribí el nombre de la categoría.",false);return;}
+    const newCat={id:uid(),name:newCatName.trim(),emoji:newCatEmoji,items:[]};
+    setMenu(m=>({...m,categories:[...m.categories,newCat]}));
+    setNewCatName("");showMsg("✅ Categoría creada. Acordate de Guardar.");
+  }
+  function moveUp(idx){if(idx===0)return;setMenu(m=>{const cats=[...m.categories];[cats[idx-1],cats[idx]]=[cats[idx],cats[idx-1]];return{...m,categories:cats};});}
+  function moveDown(idx){setMenu(m=>{const cats=[...m.categories];if(idx>=cats.length-1)return m;[cats[idx],cats[idx+1]]=[cats[idx+1],cats[idx]];return{...m,categories:cats};});}
+  function applyBulk(){
+    const pct=parseFloat(bulkPct);
+    if(isNaN(pct)||pct===0){showMsg("⚠️ Ingresá un porcentaje válido.",false);return;}
+    setMenu(m=>({...m,categories:m.categories.map(c=>{if(bulkMode==="category"&&c.id!==bulkCatId)return c;return{...c,items:c.items.map(i=>({...i,price:applyPct(i.price,pct)}))}})}));
+    showMsg(`✅ ${pct>0?"+":""}${pct}% aplicado. Tocá Guardar.`);setBulkPct("");
+  }
+  const iStyle={background:"rgba(255,255,255,0.06)",border:"1px solid rgba(180,145,60,0.3)",borderRadius:8,color:"#e8d5b0",padding:"7px 10px",fontSize:13,boxSizing:"border-box",outline:"none"};
+  const tBtn=(t,l)=><button onClick={()=>setTab(t)} style={{padding:"7px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:600,fontSize:12,background:tab===t?"#b8891e":"rgba(255,255,255,0.07)",color:tab===t?"#0a1628":"#a08040",whiteSpace:"nowrap"}}>{l}</button>;
+  const allItems=menu.categories.flatMap(c=>c.items.map(i=>({...i,catId:c.id,catName:c.name})));
+  const filtered=search.trim().length>1?allItems.filter(i=>i.name.toLowerCase().includes(search.toLowerCase())):[];
+
+  return(<div style={{minHeight:"100vh",background:"linear-gradient(160deg,#050e1a,#0d1a30)",fontFamily:"system-ui,sans-serif",color:"#e8d5b0"}}>
+    <div style={{background:"rgba(0,0,0,0.6)",padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid rgba(180,145,60,0.3)",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(8px)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <TimonSVG size={30}/>
+        <div><div style={{fontSize:14,fontWeight:700,color:"#d4a843"}}>Administración</div><div style={{fontSize:10,color:"#404860"}}>{menu.restaurant.name}</div></div>
+      </div>
+      <div style={{display:"flex",gap:7}}>
+        <button onClick={guardar} disabled={saving} style={{background:saving?"rgba(100,100,100,0.3)":"linear-gradient(135deg,#b8891e,#d4a843)",border:"none",color:saving?"#888":"#0a1628",padding:"8px 14px",borderRadius:8,cursor:saving?"wait":"pointer",fontSize:13,fontWeight:700}}>{saving?"Guardando...":"💾 Guardar"}</button>
+        <button onClick={onExit} style={{background:"rgba(180,145,60,0.12)",border:"1px solid rgba(180,145,60,0.35)",color:"#d4a843",padding:"8px 12px",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:600}}>👁️ Ver</button>
+      </div>
+    </div>
+    <div style={{padding:"13px 12px",maxWidth:680,margin:"0 auto"}}>
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        {tBtn("items","✏️ Editar")}{tBtn("bulk","📊 % Masivo")}{tBtn("cats","📂 Categorías")}{tBtn("info","🏠 Datos")}{tBtn("qr","📱 QR")}{tBtn("pdf","📄 PDF")}
+      </div>
+      {msg&&<div style={{background:msg.ok?"rgba(40,120,40,0.2)":"rgba(180,60,60,0.2)",border:`1px solid ${msg.ok?"rgba(80,200,80,0.3)":"rgba(200,80,80,0.3)"}`,borderRadius:9,padding:"10px 13px",marginBottom:12,color:msg.ok?"#80ff80":"#ff8080",fontSize:13}}>{msg.t}</div>}
+      <div style={{background:"rgba(180,140,30,0.08)",border:"1px solid rgba(180,140,30,0.2)",borderRadius:9,padding:"9px 13px",marginBottom:14,fontSize:12,color:"#a08040"}}>
+        💡 Después de cualquier cambio tocá <strong style={{color:"#d4a843"}}>💾 Guardar</strong> para que quede guardado permanentemente.
+      </div>
+
+      {tab==="items"&&<div>
+        <input type="text" placeholder="🔍 Buscar ítem..." value={search} onChange={e=>setSearch(e.target.value)} style={{...iStyle,width:"100%",marginBottom:13,padding:"9px 12px",fontSize:14}}/>
+        {search.trim().length>1?(
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.18)",borderRadius:12,overflow:"hidden"}}>
+            <div style={{background:"rgba(180,140,30,0.15)",padding:"8px 13px",fontWeight:700,fontSize:13,color:"#d4a843",borderBottom:"1px solid rgba(180,145,60,0.18)"}}>Resultados ({filtered.length})</div>
+            <div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:9}}>
+              {filtered.length===0&&<div style={{color:"#404860",fontSize:13}}>Sin resultados.</div>}
+              {filtered.map(item=><ItemRow key={item.id} item={item} onName={v=>updateName(item.catId,item.id,v)} onPrice={v=>updatePrice(item.catId,item.id,v)} onDelete={()=>deleteItem(item.catId,item.id)} iStyle={iStyle}/>)}
+            </div>
+          </div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:13}}>
+            {menu.categories.map(cat=>(<div key={cat.id} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.18)",borderRadius:12,overflow:"hidden"}}>
+              <div onClick={()=>setExpandedCat(expandedCat===cat.id?null:cat.id)} style={{background:"rgba(180,140,30,0.15)",padding:"10px 13px",fontWeight:700,fontSize:13,color:"#d4a843",borderBottom:"1px solid rgba(180,145,60,0.18)",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>{cat.emoji} {cat.name} <span style={{color:"#404860",fontWeight:400,fontSize:11}}>({cat.items.length})</span></span>
+                <span style={{color:"#a08040"}}>{expandedCat===cat.id?"▲":"▼"}</span>
+              </div>
+              {expandedCat===cat.id&&<div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:9}}>
+                {cat.items.map(item=><ItemRow key={item.id} item={item} onName={v=>updateName(cat.id,item.id,v)} onPrice={v=>updatePrice(cat.id,item.id,v)} onDelete={()=>deleteItem(cat.id,item.id)} iStyle={iStyle}/>)}
+                <button onClick={()=>addItem(cat.id)} style={{marginTop:3,background:"rgba(180,140,30,0.1)",border:"1px dashed rgba(180,140,30,0.4)",borderRadius:8,color:"#a08040",padding:"8px",cursor:"pointer",fontSize:13,fontWeight:600,width:"100%"}}>+ Agregar ítem</button>
+              </div>}
+            </div>))}
+          </div>
+        )}
+      </div>}
+
+      {tab==="bulk"&&<div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:18}}>
+        <h3 style={{color:"#d4a843",marginTop:0,marginBottom:14}}>Ajuste masivo de precios</h3>
+        <div style={{marginBottom:12}}>
+          <label style={{display:"block",marginBottom:7,fontSize:13,color:"#a08040"}}>Aplicar a:</label>
+          <div style={{display:"flex",gap:7}}>
+            {["category","all"].map(m=>(<button key={m} onClick={()=>setBulkMode(m)} style={{flex:1,padding:"9px",cursor:"pointer",borderRadius:8,fontWeight:600,fontSize:12,background:bulkMode===m?"rgba(180,140,30,0.3)":"rgba(255,255,255,0.06)",border:bulkMode===m?"1px solid #b8891e":"1px solid rgba(180,145,60,0.2)",color:bulkMode===m?"#d4a843":"#6a6040"}}>{m==="category"?"Una categoría":"Todo el menú"}</button>))}
+          </div>
+        </div>
+        {bulkMode==="category"&&<div style={{marginBottom:12}}>
+          <label style={{display:"block",marginBottom:6,fontSize:13,color:"#a08040"}}>Categoría:</label>
+          <select value={bulkCatId} onChange={e=>setBulkCatId(e.target.value)} style={{...iStyle,width:"100%",cursor:"pointer"}}>
+            {menu.categories.map(c=><option key={c.id} value={c.id} style={{background:"#0d1a30"}}>{c.emoji} {c.name}</option>)}
+          </select>
+        </div>}
+        <div style={{marginBottom:12}}>
+          <label style={{display:"block",marginBottom:6,fontSize:13,color:"#a08040"}}>Porcentaje (negativo = baja):</label>
+          <div style={{display:"flex",gap:7,alignItems:"center"}}>
+            <input type="number" placeholder="Ej: 20 o -15" value={bulkPct} onChange={e=>setBulkPct(e.target.value)} style={{...iStyle,flex:1,fontSize:22,textAlign:"center",color:"#d4a843",fontFamily:"Arial,sans-serif"}}/>
+            <span style={{fontSize:22,color:"#6a6040"}}>%</span>
+          </div>
+        </div>
+        {bulkPct&&!isNaN(parseFloat(bulkPct))&&<div style={{background:"rgba(180,140,30,0.08)",border:"1px solid rgba(180,140,30,0.2)",borderRadius:9,padding:"9px 12px",marginBottom:12,fontSize:12,color:"#a08040"}}>
+          💡 <strong>{bulkMode==="all"?"Todo el menú":menu.categories.find(c=>c.id===bulkCatId)?.name}</strong> {parseFloat(bulkPct)>0?"subirá":"bajará"} un <strong>{Math.abs(parseFloat(bulkPct))}%</strong>
+        </div>}
+        <button onClick={applyBulk} style={{width:"100%",background:"linear-gradient(135deg,#b8891e,#d4a843)",border:"none",borderRadius:9,padding:"13px",fontWeight:700,fontSize:14,color:"#0a1628",cursor:"pointer"}}>Aplicar ajuste</button>
+      </div>}
+
+      {tab==="cats"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:16}}>
+          <h3 style={{color:"#d4a843",marginTop:0,marginBottom:14}}>Orden de categorías</h3>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {menu.categories.map((cat,idx)=>(<div key={cat.id} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.04)",borderRadius:9,padding:"9px 12px"}}>
+              <span style={{fontSize:18}}>{cat.emoji}</span>
+              <span style={{flex:1,fontSize:13,color:"#c8c0a0"}}>{cat.name}</span>
+              <div style={{display:"flex",gap:5}}>
+                <button onClick={()=>moveUp(idx)} disabled={idx===0} style={{background:"rgba(180,140,30,0.15)",border:"1px solid rgba(180,140,30,0.3)",borderRadius:6,color:idx===0?"#404040":"#d4a843",cursor:idx===0?"default":"pointer",width:28,height:28,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>▲</button>
+                <button onClick={()=>moveDown(idx)} disabled={idx===menu.categories.length-1} style={{background:"rgba(180,140,30,0.15)",border:"1px solid rgba(180,140,30,0.3)",borderRadius:6,color:idx===menu.categories.length-1?"#404040":"#d4a843",cursor:idx===menu.categories.length-1?"default":"pointer",width:28,height:28,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>▼</button>
+              </div>
+            </div>))}
+          </div>
+        </div>
+        <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:16}}>
+          <h3 style={{color:"#d4a843",marginTop:0,marginBottom:14}}>Agregar nueva categoría</h3>
+          <div style={{marginBottom:10}}>
+            <label style={{display:"block",marginBottom:5,fontSize:13,color:"#a08040"}}>Emoji:</label>
+            <input type="text" value={newCatEmoji} onChange={e=>setNewCatEmoji(e.target.value)} style={{...iStyle,width:60,textAlign:"center",fontSize:22}} maxLength={2}/>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={{display:"block",marginBottom:5,fontSize:13,color:"#a08040"}}>Nombre:</label>
+            <input type="text" placeholder="Ej: Pastas especiales" value={newCatName} onChange={e=>setNewCatName(e.target.value)} style={{...iStyle,width:"100%"}}/>
+          </div>
+          <button onClick={addCategory} style={{width:"100%",background:"linear-gradient(135deg,#b8891e,#d4a843)",border:"none",borderRadius:9,padding:"12px",fontWeight:700,fontSize:14,color:"#0a1628",cursor:"pointer"}}>+ Crear categoría</button>
+        </div>
+      </div>}
+
+      {tab==="info"&&<div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:18}}>
+        <h3 style={{color:"#d4a843",marginTop:0,marginBottom:14}}>Datos del restaurante</h3>
+        {[["Nombre","name"],["Subtítulo","subtitle"],["Dirección / Teléfono","address"]].map(([lbl,key])=>(<div key={key} style={{marginBottom:12}}>
+          <label style={{display:"block",marginBottom:5,fontSize:13,color:"#a08040"}}>{lbl}</label>
+          <input type="text" value={editR[key]||""} onChange={e=>setEditR(r=>({...r,[key]:e.target.value}))} style={{...iStyle,width:"100%"}}/>
+        </div>))}
+        <button onClick={()=>{setMenu(m=>({...m,restaurant:{...m.restaurant,...editR}}));showMsg("✅ Datos actualizados. Tocá Guardar.");}} style={{width:"100%",background:"linear-gradient(135deg,#b8891e,#d4a843)",border:"none",borderRadius:9,padding:"12px",fontWeight:700,fontSize:14,color:"#0a1628",cursor:"pointer"}}>Aplicar</button>
+      </div>}
+
+      {tab==="qr"&&<div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:22,textAlign:"center"}}>
+        <h3 style={{color:"#d4a843",marginTop:0,marginBottom:8}}>Código QR del menú</h3>
+        <p style={{color:"#6a6040",fontSize:13,marginBottom:18}}>Escanealo con cualquier celular para ver el menú.</p>
+        <div style={{display:"inline-block",background:"#fff8f0",padding:16,borderRadius:13,border:"3px solid rgba(180,140,30,0.4)",marginBottom:16}}>
+          <img src={"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(SITE_URL)+"&bgcolor=fff8f0&color=0a1628&margin=8"} alt="QR" style={{width:200,height:200,borderRadius:10,display:"block"}} onError={e=>{e.target.style.display="none";}}/>
+          <div style={{marginTop:8,color:"#1a0800",fontSize:13,fontWeight:700}}>El Timón</div>
+          <div style={{color:"#6a4010",fontSize:11}}>📷 Escaneá para ver el menú</div>
+        </div>
+        <div style={{background:"rgba(180,140,30,0.08)",border:"1px solid rgba(180,140,30,0.2)",borderRadius:9,padding:"12px 14px",fontSize:13,color:"#a08040"}}>
+          <strong>URL del menú:</strong><br/>
+          <code style={{color:"#d4a843",fontSize:12}}>{SITE_URL}</code>
+        </div>
+      </div>}
+
+      {tab==="pdf"&&<div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:22,textAlign:"center"}}>
+        <h3 style={{color:"#d4a843",marginTop:0,marginBottom:8}}>Descargar carta completa</h3>
+        <p style={{color:"#6a6040",fontSize:13,marginBottom:20}}>Genera un PDF con todos los ítems y precios, listo para imprimir en A4.</p>
+        <button onClick={()=>generarPDF(menu)} style={{background:"linear-gradient(135deg,#b8891e,#d4a843)",border:"none",borderRadius:10,padding:"14px 28px",fontWeight:700,fontSize:15,color:"#0a1628",cursor:"pointer",marginBottom:16}}>
+          📄 Descargar PDF
+        </button>
+        <div style={{background:"rgba(180,140,30,0.08)",border:"1px solid rgba(180,140,30,0.2)",borderRadius:9,padding:"12px 14px",fontSize:12,color:"#a08040",textAlign:"left"}}>
+          💡 El PDF incluye todas las categorías con sus ítems y precios actuales. Podés imprimirlo en hojas A4.
+        </div>
+      </div>}
+    </div>
+  </div>);
+}
+
+function App(){
+  const [menu,setMenu]=useState(MENU_INICIAL);
+  const [view,setView]=useState("customer");
+  const [showLogin,setShowLogin]=useState(false);
+  const [pin,setPin]=useState("");
+  const [pinErr,setPinErr]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const PIN="1234";
+  window._showLogin=()=>setShowLogin(true);
+
+  useEffect(()=>{
+    dbLoad().then(rows=>{
+      if(rows&&rows.length>0){const m=dbToMenu(rows,MENU_INICIAL);if(m)setMenu(m);}
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+  },[]);
+
+  function tryLogin(){
+    if(pin===PIN){setView("admin");setShowLogin(false);setPin("");setPinErr(false);}
+    else{setPinErr(true);setTimeout(()=>setPinErr(false),1500);}
+  }
+
+  if(loading)return(<div style={{minHeight:"100vh",background:"#0a1628",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20}}>
+    <TimonSVG size={70}/><div style={{color:"#d4a843",fontSize:16,fontFamily:"'Palatino Linotype',serif",letterSpacing:2}}>Cargando menú...</div>
+  </div>);
+
+  if(view==="admin")return<AdminPanel menu={menu} setMenu={setMenu} onExit={()=>setView("customer")}/>;
+  return(<div style={{position:"relative"}}>
+    <CustomerView menu={menu}/>
+    {showLogin&&(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,backdropFilter:"blur(8px)"}}>
+      <div style={{background:"linear-gradient(160deg,#050e1a,#0d1a30)",border:"1px solid rgba(180,145,60,0.4)",borderRadius:18,padding:28,width:"min(300px,90vw)",textAlign:"center"}}>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:10}}><TimonSVG size={48}/></div>
+        <h3 style={{color:"#d4a843",margin:"0 0 4px"}}>Administración</h3>
+        <p style={{color:"#6a6040",fontSize:13,margin:"0 0 14px"}}>Ingresá el PIN</p>
+        <input type="password" placeholder="PIN" value={pin} onChange={e=>setPin(e.target.value)} onKeyDown={e=>e.key==="Enter"&&tryLogin()} style={{width:"100%",background:pinErr?"rgba(200,50,50,0.15)":"rgba(255,255,255,0.07)",border:pinErr?"1px solid rgba(200,80,80,0.6)":"1px solid rgba(180,145,60,0.3)",borderRadius:9,color:"#e8d5b0",padding:"11px 14px",fontSize:22,textAlign:"center",letterSpacing:8,boxSizing:"border-box",outline:"none",marginBottom:4,fontFamily:"Arial,sans-serif"}}/>
+        {pinErr&&<div style={{color:"#ff6060",fontSize:12,marginBottom:5}}>PIN incorrecto</div>}
+        <div style={{display:"flex",gap:7,marginTop:10}}>
+          <button onClick={()=>{setShowLogin(false);setPin("");}} style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(180,145,60,0.2)",color:"#6a6040",padding:"10px",borderRadius:8,cursor:"pointer",fontSize:13}}>Cancelar</button>
+          <button onClick={tryLogin} style={{flex:1,background:"linear-gradient(135deg,#b8891e,#d4a843)",border:"none",color:"#0a1628",padding:"10px",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:700}}>Entrar</button>
+        </div>
+      </div>
+    </div>)}
+  </div>);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
