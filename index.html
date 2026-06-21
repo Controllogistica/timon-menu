@@ -24,7 +24,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 const SUPABASE_URL = "https://iyvhjwzsazpoaufzaqpl.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dmhqd3pzYXpwb2F1ZnphcXBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTM5MTQsImV4cCI6MjA5NjQyOTkxNH0.MGkMOo4egJXSZ7JcQec4jsCoK6y2zWGbQ_emsNs9Sbg";
-const SITE_URL = "https://timon-menu.vercel.app"; //v2
+const SITE_URL = "https://timon-menu.vercel.app";
 
 const MENU_INICIAL = {
   restaurant:{name:"El Timón",subtitle:"Cocina casera · Parrilla · Pastas · Pescados",address:"Tel: 4772-0370 / 4777-2798",currency:"$"},
@@ -414,11 +414,18 @@ function CustomerView({menu}){
   </div>);
 }
 
-function ItemRow({item,onName,onPrice,onDelete,iStyle}){
+function ItemRow({item,onName,onPrice,onDelete,onMoveUp,onMoveDown,isFirst,isLast,iStyle}){
   const [editing,setEditing]=useState(false);
   const [localName,setLocalName]=useState(item.name);
+  const dragRef=React.useRef(null);
   useEffect(()=>setLocalName(item.name),[item.name]);
-  return(<div style={{display:"flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"7px 9px"}}>
+  const btnStyle=(disabled)=>({background:"rgba(180,140,30,0.12)",border:"1px solid rgba(180,140,30,0.25)",borderRadius:5,color:disabled?"#404040":"#d4a843",cursor:disabled?"default":"pointer",width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:11,padding:0});
+  return(<div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"7px 9px"}}>
+    {/* Flechitas */}
+    <div style={{display:"flex",flexDirection:"column",gap:2,flexShrink:0}}>
+      <button onClick={onMoveUp} disabled={isFirst} style={btnStyle(isFirst)}>▲</button>
+      <button onClick={onMoveDown} disabled={isLast} style={btnStyle(isLast)}>▼</button>
+    </div>
     <div style={{flex:1}}>
       {editing?<input type="text" value={localName} onChange={e=>setLocalName(e.target.value)} onBlur={()=>{onName(localName);setEditing(false);}} onKeyDown={e=>{if(e.key==="Enter"){onName(localName);setEditing(false);}}} autoFocus style={{...iStyle,width:"100%",fontSize:13}}/>
       :<div onClick={()=>setEditing(true)} style={{fontSize:13,color:"#c8c0a0",cursor:"text",padding:"3px 5px",borderRadius:5,border:"1px solid transparent"}} title="Tocá para editar">{item.name}</div>}
@@ -427,7 +434,7 @@ function ItemRow({item,onName,onPrice,onDelete,iStyle}){
       <span style={{color:"#505838",fontSize:12}}>$</span>
       <input type="text" value={item.price.toLocaleString("es-AR")} onChange={e=>onPrice(e.target.value)} style={{...iStyle,width:88,textAlign:"right",fontWeight:700,fontSize:13,color:"#d4a843",fontFamily:"Arial,Helvetica,sans-serif"}}/>
     </div>
-    <button onClick={onDelete} style={{background:"rgba(200,60,60,0.15)",border:"1px solid rgba(200,60,60,0.3)",borderRadius:7,color:"#ff7070",cursor:"pointer",fontSize:18,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,lineHeight:1}}>×</button>
+    <button onClick={onDelete} style={{background:"rgba(200,60,60,0.15)",border:"1px solid rgba(200,60,60,0.3)",borderRadius:7,color:"#ff7070",cursor:"pointer",fontSize:18,width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,lineHeight:1}}>×</button>
   </div>);
 }
 
@@ -457,6 +464,10 @@ function AdminPanel({menu,setMenu,onExit}){
   function updateName(catId,itemId,val){setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:c.items.map(i=>i.id!==itemId?i:{...i,name:val})})}));}
   function deleteItem(catId,itemId){setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:c.items.filter(i=>i.id!==itemId)})}));}
   function addItem(catId){setMenu(m=>({...m,categories:m.categories.map(c=>c.id!==catId?c:{...c,items:[...c.items,{id:uid(),name:"Nuevo ítem",price:0}]})}));}
+  function moveItemUp(catId,idx){setMenu(m=>({...m,categories:m.categories.map(c=>{if(c.id!==catId)return c;const items=[...c.items];if(idx===0)return c;[items[idx-1],items[idx]]=[items[idx],items[idx-1]];return{...c,items};})}))}
+  function moveItemDown(catId,idx){setMenu(m=>({...m,categories:m.categories.map(c=>{if(c.id!==catId)return c;const items=[...c.items];if(idx>=items.length-1)return c;[items[idx],items[idx+1]]=[items[idx+1],items[idx]];return{...c,items};})}))}
+  function moveItemUp(catId,idx){setMenu(m=>({...m,categories:m.categories.map(c=>{if(c.id!==catId)return c;const items=[...c.items];if(idx===0)return c;[items[idx-1],items[idx]]=[items[idx],items[idx-1]];return{...c,items};})}))}
+  function moveItemDown(catId,idx){setMenu(m=>({...m,categories:m.categories.map(c=>{if(c.id!==catId)return c;const items=[...c.items];if(idx>=items.length-1)return c;[items[idx],items[idx+1]]=[items[idx+1],items[idx]];return{...c,items};})}))};
   function addCategory(){
     if(!newCatName.trim()){showMsg("⚠️ Escribí el nombre de la categoría.",false);return;}
     const newCat={id:uid(),name:newCatName.trim(),emoji:newCatEmoji,items:[]};
@@ -503,7 +514,7 @@ function AdminPanel({menu,setMenu,onExit}){
             <div style={{background:"rgba(180,140,30,0.15)",padding:"8px 13px",fontWeight:700,fontSize:13,color:"#d4a843",borderBottom:"1px solid rgba(180,145,60,0.18)"}}>Resultados ({filtered.length})</div>
             <div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:9}}>
               {filtered.length===0&&<div style={{color:"#404860",fontSize:13}}>Sin resultados.</div>}
-              {filtered.map(item=><ItemRow key={item.id} item={item} onName={v=>updateName(item.catId,item.id,v)} onPrice={v=>updatePrice(item.catId,item.id,v)} onDelete={()=>deleteItem(item.catId,item.id)} iStyle={iStyle}/>)}
+              {filtered.map((item,idx)=><ItemRow key={item.id} item={item} onName={v=>updateName(item.catId,item.id,v)} onPrice={v=>updatePrice(item.catId,item.id,v)} onDelete={()=>deleteItem(item.catId,item.id)} onMoveUp={()=>{}} onMoveDown={()=>{}} isFirst={true} isLast={true} iStyle={iStyle}/>)}
             </div>
           </div>
         ):(
@@ -514,7 +525,7 @@ function AdminPanel({menu,setMenu,onExit}){
                 <span style={{color:"#a08040"}}>{expandedCat===cat.id?"▲":"▼"}</span>
               </div>
               {expandedCat===cat.id&&<div style={{padding:"9px 11px",display:"flex",flexDirection:"column",gap:9}}>
-                {cat.items.map(item=><ItemRow key={item.id} item={item} onName={v=>updateName(cat.id,item.id,v)} onPrice={v=>updatePrice(cat.id,item.id,v)} onDelete={()=>deleteItem(cat.id,item.id)} iStyle={iStyle}/>)}
+                {cat.items.map((item,idx)=><ItemRow key={item.id} item={item} onName={v=>updateName(cat.id,item.id,v)} onPrice={v=>updatePrice(cat.id,item.id,v)} onDelete={()=>deleteItem(cat.id,item.id)} onMoveUp={()=>moveItemUp(cat.id,idx)} onMoveDown={()=>moveItemDown(cat.id,idx)} isFirst={idx===0} isLast={idx===cat.items.length-1} iStyle={iStyle}/>)}
                 <button onClick={()=>addItem(cat.id)} style={{marginTop:3,background:"rgba(180,140,30,0.1)",border:"1px dashed rgba(180,140,30,0.4)",borderRadius:8,color:"#a08040",padding:"8px",cursor:"pointer",fontSize:13,fontWeight:600,width:"100%"}}>+ Agregar ítem</button>
               </div>}
             </div>))}
@@ -552,15 +563,26 @@ function AdminPanel({menu,setMenu,onExit}){
       {tab==="cats"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:16}}>
           <h3 style={{color:"#d4a843",marginTop:0,marginBottom:14}}>Orden de categorías</h3>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {menu.categories.map((cat,idx)=>(<div key={cat.id} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.04)",borderRadius:9,padding:"9px 12px"}}>
-              <span style={{fontSize:18}}>{cat.emoji}</span>
-              <span style={{flex:1,fontSize:13,color:"#c8c0a0"}}>{cat.name}</span>
-              <div style={{display:"flex",gap:5}}>
-                <button onClick={()=>moveUp(idx)} disabled={idx===0} style={{background:"rgba(180,140,30,0.15)",border:"1px solid rgba(180,140,30,0.3)",borderRadius:6,color:idx===0?"#404040":"#d4a843",cursor:idx===0?"default":"pointer",width:28,height:28,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>▲</button>
-                <button onClick={()=>moveDown(idx)} disabled={idx===menu.categories.length-1} style={{background:"rgba(180,140,30,0.15)",border:"1px solid rgba(180,140,30,0.3)",borderRadius:6,color:idx===menu.categories.length-1?"#404040":"#d4a843",cursor:idx===menu.categories.length-1?"default":"pointer",width:28,height:28,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>▼</button>
-              </div>
-            </div>))}
+          <p style={{fontSize:11,color:"#6a6040",marginBottom:8}}>💡 Arrastrá para reordenar, o usá las flechas</p>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {menu.categories.map((cat,idx)=>{
+              const [isDragOver,setIsDragOver]=React.useState(false);
+              return(<div key={cat.id}
+                draggable
+                onDragStart={e=>e.dataTransfer.setData("catIdx",idx)}
+                onDragOver={e=>{e.preventDefault();setIsDragOver(true);}}
+                onDragLeave={()=>setIsDragOver(false)}
+                onDrop={e=>{e.preventDefault();setIsDragOver(false);const from=parseInt(e.dataTransfer.getData("catIdx"));if(from===idx)return;setMenu(m=>{const cats=[...m.categories];const[moved]=cats.splice(from,1);cats.splice(idx,0,moved);return{...m,categories:cats};});}}
+                style={{display:"flex",alignItems:"center",gap:8,background:isDragOver?"rgba(180,140,30,0.2)":"rgba(255,255,255,0.04)",borderRadius:9,padding:"9px 12px",border:isDragOver?"1px solid #b8891e":"1px solid transparent",cursor:"grab",transition:"all 0.15s"}}>
+                <span style={{color:"#404860",fontSize:14,cursor:"grab"}}>⠿</span>
+                <span style={{fontSize:18}}>{cat.emoji}</span>
+                <span style={{flex:1,fontSize:13,color:"#c8c0a0"}}>{cat.name} <span style={{color:"#404860",fontSize:11}}>({cat.items.length})</span></span>
+                <div style={{display:"flex",gap:4}}>
+                  <button onClick={()=>moveUp(idx)} disabled={idx===0} style={{background:"rgba(180,140,30,0.15)",border:"1px solid rgba(180,140,30,0.3)",borderRadius:6,color:idx===0?"#404040":"#d4a843",cursor:idx===0?"default":"pointer",width:26,height:26,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>▲</button>
+                  <button onClick={()=>moveDown(idx)} disabled={idx===menu.categories.length-1} style={{background:"rgba(180,140,30,0.15)",border:"1px solid rgba(180,140,30,0.3)",borderRadius:6,color:idx===menu.categories.length-1?"#404040":"#d4a843",cursor:idx===menu.categories.length-1?"default":"pointer",width:26,height:26,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>▼</button>
+                </div>
+              </div>);
+            })}
           </div>
         </div>
         <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(180,145,60,0.2)",borderRadius:12,padding:16}}>
