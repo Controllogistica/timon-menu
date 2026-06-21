@@ -286,7 +286,7 @@ function generarPDF(menu){
     doc.setFont("helvetica","bold");
     doc.setFontSize(10);
     doc.setTextColor(30,20,5);
-    doc.text(cat.emoji+" "+cat.name.toUpperCase(),margin+3,y+0.5);
+    doc.text(cat.name.toUpperCase(),margin+3,y+0.5);
     y+=10;
 
     // Ítems
@@ -397,8 +397,7 @@ function CustomerView({menu}){
       {restaurant.address&&<p style={{color:"#4a5570",fontSize:12,margin:0}}>{restaurant.address}</p>}
     </div>
     <div style={{display:"flex",overflowX:"auto",gap:7,padding:"11px 11px 0",scrollbarWidth:"none"}}>
-      {categories.map(c=>(<button key={c.id} onClick={()=>setTab(c.id)} style={{flex:"0 0 auto",background:tab===c.id?"linear-gradient(135deg,#b8891e,#d4a843)":"rgba(255,255,255,0.05)",border:tab===c.id?"none":"1px solid rgba(180,145,60,0.2)",color:tab===c.id?"#0a1628":"#a08040",padding:"6px 14px",borderRadius:999,fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{c.emoji} {c.name}</button>))}
-    </div>
+      {categories.map(c=>(<button key={c.id} onClick={()=>setTab(c.id)} style={{flex:"0 0 auto",background:tab===c.id?"linear-gradient(135deg,#b8891e,#d4a843)":"rgba(255,255,255,0.05)",border:tab===c.id?"none":"1px solid rgba(180,145,60,0.2)",color:tab===c.id?"#0a1628":"#a08040",padding:"9px 18px",borderRadius:999,fontSize:14,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>{c.emoji} {c.name}</button>))}    </div>
     <div style={{padding:"15px 11px 50px"}}>
       {cat&&<><h2 style={{fontSize:17,color:"#d4a843",marginBottom:11,fontFamily:"'Palatino Linotype',serif",borderBottom:"1px solid rgba(180,145,60,0.25)",paddingBottom:7}}>{cat.emoji} {cat.name}</h2>
       {cat.items.length===0?<p style={{color:"#404860",fontSize:13,fontStyle:"italic"}}>Próximamente...</p>:
